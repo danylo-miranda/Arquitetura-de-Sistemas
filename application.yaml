@@ -1,10 +1,69 @@
+# Configuração do servidor
+server:
+  port: 8080
+
+# Configuração da aplicação
+spring:
+  application:
+    name: delivery-api
+  
+  # Configuração do H2 Database
+  datasource:
+    url: jdbc:h2:mem:deliverydb
+    driverClassName: org.h2.Driver
+    username: sa
+    password: ""
+  
+  # Console H2
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  # JPA/Hibernate
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+# Configurações do SpringDoc OpenAPI (Swagger)
+springdoc:
+  api-docs:
+    path: /api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: method
+    tags-sorter: alpha
+    try-it-out-enabled: true
+    filter: true
+    display-request-duration: true
+
+# Configurações do Spring Boot Actuator (Health Check)
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics,env
+      base-path: /actuator
   endpoint:
     health:
       show-details: always
+      show-components: always
     info:
       enabled: true
+    metrics:
+      enabled: true
+
+# Logging
+logging:
+  level:
+    com.deliverytech.delivery: DEBUG
+    org.springframework.web: INFO
+    org.springdoc: INFO
