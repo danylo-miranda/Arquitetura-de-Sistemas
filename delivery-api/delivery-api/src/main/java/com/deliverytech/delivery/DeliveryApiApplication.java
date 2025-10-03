@@ -14,7 +14,6 @@ public class DeliveryApiApplication {
         
         SpringApplication.run(DeliveryApiApplication.class, args);
         
-        System.out.println("Aplicação iniciada com sucesso!");
         System.out.println("Swagger UI: http://localhost:8080/swagger-ui.html");
         System.out.println("H2 Console: http://localhost:8080/h2-console");
         System.out.println("Health Check: http://localhost:8080/health");
