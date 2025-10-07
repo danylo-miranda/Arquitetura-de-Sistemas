@@ -1,74 +1,94 @@
 package com.deliverytech.delivery.service;
 
-import com.deliverytech.delivery.dto.RestaurantDTO;
-import com.deliverytech.delivery.entity.Restaurant;
-import com.deliverytech.delivery.repository.IRestaurantRepository;
+import java.util.List;
+
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import com.deliverytech.delivery.dto.RestaurantDTO;
+import com.deliverytech.delivery.entity.Restaurant;
+import com.deliverytech.delivery.repository.IRestaurantRepository;
 
-@Service("restaurantService") // ← NOME DO BEAN EXPLÍCITO
+@Service
 public class RestaurantService implements IRestaurantService {
-    
+ 
     @Autowired
-    private IRestaurantRepository restaurantRepository;
-    
-    @Override
-    public List<RestaurantDTO> findAll() {
-        return restaurantRepository.findAll()
-                .stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    private IRestaurantRepository repository;
+ 
+    public RestaurantService(IRestaurantRepository repository)
+    {
+        this.repository = repository;
     }
-    
-    @Override
-    public RestaurantDTO findById(Long id) {
-        Restaurant restaurant = restaurantRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
-        return convertToDTO(restaurant);
+ 
+    public RestaurantService() {
+        super();
     }
-    
+
     @Override
     public RestaurantDTO create(RestaurantDTO restaurantDTO) {
-        Restaurant restaurant = convertToEntity(restaurantDTO);
-        Restaurant saved = restaurantRepository.save(restaurant);
-        return convertToDTO(saved);
+        return createRestaurant(restaurantDTO);
     }
-    
+
+    @Override
+    public List<RestaurantDTO> findAll() {
+        return getAllRestaurants();
+    }
+
+    @Override
+    public RestaurantDTO findById(Long id) {
+        ModelMapper mapper = new ModelMapper();
+        Restaurant restaurant = repository.findById(id).orElse(null);
+        if (restaurant == null) {
+            return null;
+        }
+        return mapper.map(restaurant, RestaurantDTO.class);
+    }
+
     @Override
     public RestaurantDTO update(Long id, RestaurantDTO restaurantDTO) {
-        Restaurant existing = restaurantRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado"));
-        
-        existing.setName(restaurantDTO.getName());
-        existing.setDescription(restaurantDTO.getDescription());
-        existing.setCuisine(restaurantDTO.getCuisine());
-        
-        Restaurant updated = restaurantRepository.save(existing);
-        return convertToDTO(updated);
+        Restaurant restaurant = repository.findById(id).orElse(null);
+        if (restaurant == null) {
+            return null;
+        }
+        restaurant.setName(restaurantDTO.getName());
+        restaurant.setDescription(restaurantDTO.getDescription());
+        Restaurant updatedRestaurant = repository.save(restaurant);
+        ModelMapper mapper = new ModelMapper();
+        return mapper.map(updatedRestaurant, RestaurantDTO.class);
     }
-    
+
     @Override
     public void delete(Long id) {
-        restaurantRepository.deleteById(id);
+        repository.deleteById(id);
     }
-    
-    private RestaurantDTO convertToDTO(Restaurant restaurant) {
+
+    public RestaurantDTO createRestaurant(RestaurantDTO restaurantDTO) {
+       ModelMapper mapper = new ModelMapper();
+ 
+       Restaurant entity = mapper.map(restaurantDTO, Restaurant.class);
+       Restaurant restaurant = repository.save(entity);
+       RestaurantDTO dto = mapper.map(restaurant, RestaurantDTO.class);
+ 
+       return dto;
+    }
+ 
+public List<RestaurantDTO> getAllRestaurants() {
+    List<Restaurant> restaurantes = repository.findAll();
+
+    List<RestaurantDTO> restaurantDtoList = restaurantes.stream()
+        .map(this::ConvertEntityToDto)
+        .toList();
+
+    return restaurantDtoList;
+}
+   
+ 
+    private RestaurantDTO ConvertEntityToDto(Restaurant entity) {
         RestaurantDTO dto = new RestaurantDTO();
-        dto.setId(restaurant.getId());
-        dto.setName(restaurant.getName());
-        dto.setDescription(restaurant.getDescription());
-        dto.setCuisine(restaurant.getCuisine());
+        dto.setName(entity.getName());
+        dto.setDescription((entity.getDescription()));
         return dto;
     }
-    
-    private Restaurant convertToEntity(RestaurantDTO dto) {
-        Restaurant restaurant = new Restaurant();
-        restaurant.setName(dto.getName());
-        restaurant.setDescription(dto.getDescription());
-        restaurant.setCuisine(dto.getCuisine());
-        return restaurant;
-    }
+ 
 }
