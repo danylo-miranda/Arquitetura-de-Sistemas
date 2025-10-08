@@ -1,5 +1,5 @@
 package com.deliverytech.delivery.controller;
 
-public @interface RestController {
+public class ClienteController {
 
 }
