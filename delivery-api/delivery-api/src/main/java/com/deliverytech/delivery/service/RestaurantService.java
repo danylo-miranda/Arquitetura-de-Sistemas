@@ -39,8 +39,6 @@ public class RestaurantService implements IRestaurantService {
         return restaurantDtoList;
     }
     
-    // ✅ ADICIONE ESTES 3 MÉTODOS QUE ESTÃO FALTANDO:
-    
     @Override
     public RestaurantDTO findById(Long id) {
         ModelMapper mapper = new ModelMapper();
