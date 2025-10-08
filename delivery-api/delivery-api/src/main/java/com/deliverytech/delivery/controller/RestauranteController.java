@@ -3,73 +3,44 @@ package com.deliverytech.delivery.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.deliverytech.delivery.dto.RestaurantDTO;
 import com.deliverytech.delivery.service.IRestaurantService;
 
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/restaurantes")
-@Tag(name = "Restaurantes", description = "Operações para gerenciamento de restaurantes")
+@RequestMapping("/api/v1/restaurants")
 public class RestauranteController {
     
     @Autowired
-    @Qualifier("restaurantService") // ← REFERÊNCIA EXPLÍCITA AO BEAN
     private IRestaurantService restaurantService;
     
-    @Operation(summary = "Listar todos os restaurantes")
+    // Construtor com log
+    public RestauranteController() {
+        System.out.println("✅ RestauranteController inicializado!");
+    }
+ 
     @GetMapping
-    public List<RestaurantDTO> listarRestaurantes() {
-        return restaurantService.findAll();
+    public ResponseEntity<List<RestaurantDTO>> list() {
+        System.out.println("🎯 GET /api/v1/restaurants chamado");
+        List<RestaurantDTO> restaurants = restaurantService.findAll();
+        System.out.println("📋 Retornando " + restaurants.size() + " restaurantes");
+        return ResponseEntity.status(HttpStatus.OK).body(restaurants);
     }
-    
-    @Operation(summary = "Buscar restaurante por ID")
-    @GetMapping("/{id}")
-    public ResponseEntity<RestaurantDTO> buscarRestaurante(@PathVariable Long id) {
-        try {
-            RestaurantDTO restaurante = restaurantService.findById(id);
-            return ResponseEntity.ok(restaurante);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
-    @Operation(summary = "Criar novo restaurante")
+ 
     @PostMapping
-    public RestaurantDTO criarRestaurante(@RequestBody RestaurantDTO restauranteDTO) {
-        return restaurantService.create(restauranteDTO);
-    }
-    
-    @Operation(summary = "Atualizar restaurante")
-    @PutMapping("/{id}")
-    public ResponseEntity<RestaurantDTO> atualizarRestaurante(@PathVariable Long id, @RequestBody RestaurantDTO restauranteDTO) {
-        try {
-            RestaurantDTO atualizado = restaurantService.update(id, restauranteDTO);
-            return ResponseEntity.ok(atualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-    
-    @Operation(summary = "Deletar restaurante")
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarRestaurante(@PathVariable Long id) {
-        try {
-            restaurantService.delete(id);
-            return ResponseEntity.noContent().build();
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
+    public ResponseEntity<RestaurantDTO> create(@Valid @RequestBody RestaurantDTO restaurantDTO) {
+        System.out.println("🎯 POST /api/v1/restaurants chamado: " + restaurantDTO);
+        RestaurantDTO restaurant = restaurantService.create(restaurantDTO);
+        System.out.println("✅ Restaurante criado: " + restaurant);
+        return ResponseEntity.status(HttpStatus.CREATED).body(restaurant);
     }
 }

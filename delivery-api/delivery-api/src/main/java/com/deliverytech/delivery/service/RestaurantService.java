@@ -1,5 +1,6 @@
 package com.deliverytech.delivery.service;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
@@ -10,60 +11,15 @@ import com.deliverytech.delivery.dto.RestaurantDTO;
 import com.deliverytech.delivery.entity.Restaurant;
 import com.deliverytech.delivery.repository.IRestaurantRepository;
 
+
 @Service
 public class RestaurantService implements IRestaurantService {
  
     @Autowired
     private IRestaurantRepository repository;
  
-    public RestaurantService(IRestaurantRepository repository)
-    {
-        this.repository = repository;
-    }
- 
-    public RestaurantService() {
-        super();
-    }
-
     @Override
     public RestaurantDTO create(RestaurantDTO restaurantDTO) {
-        return createRestaurant(restaurantDTO);
-    }
-
-    @Override
-    public List<RestaurantDTO> findAll() {
-        return getAllRestaurants();
-    }
-
-    @Override
-    public RestaurantDTO findById(Long id) {
-        ModelMapper mapper = new ModelMapper();
-        Restaurant restaurant = repository.findById(id).orElse(null);
-        if (restaurant == null) {
-            return null;
-        }
-        return mapper.map(restaurant, RestaurantDTO.class);
-    }
-
-    @Override
-    public RestaurantDTO update(Long id, RestaurantDTO restaurantDTO) {
-        Restaurant restaurant = repository.findById(id).orElse(null);
-        if (restaurant == null) {
-            return null;
-        }
-        restaurant.setName(restaurantDTO.getName());
-        restaurant.setDescription(restaurantDTO.getDescription());
-        Restaurant updatedRestaurant = repository.save(restaurant);
-        ModelMapper mapper = new ModelMapper();
-        return mapper.map(updatedRestaurant, RestaurantDTO.class);
-    }
-
-    @Override
-    public void delete(Long id) {
-        repository.deleteById(id);
-    }
-
-    public RestaurantDTO createRestaurant(RestaurantDTO restaurantDTO) {
        ModelMapper mapper = new ModelMapper();
  
        Restaurant entity = mapper.map(restaurantDTO, Restaurant.class);
@@ -73,22 +29,45 @@ public class RestaurantService implements IRestaurantService {
        return dto;
     }
  
-public List<RestaurantDTO> getAllRestaurants() {
-    List<Restaurant> restaurantes = repository.findAll();
-
-    List<RestaurantDTO> restaurantDtoList = restaurantes.stream()
-        .map(this::ConvertEntityToDto)
-        .toList();
-
-    return restaurantDtoList;
-}
-   
+    @Override
+    public List<RestaurantDTO> findAll() {
+        ModelMapper mapper = new ModelMapper();  
+        List<Restaurant> restaurantes = repository.findAll();
  
-    private RestaurantDTO ConvertEntityToDto(Restaurant entity) {
-        RestaurantDTO dto = new RestaurantDTO();
-        dto.setName(entity.getName());
-        dto.setDescription((entity.getDescription()));
-        return dto;
+        List<RestaurantDTO> restaurantDtoList = Arrays.asList(mapper.map(restaurantes, RestaurantDTO[].class));
+ 
+        return restaurantDtoList;
     }
- 
+    
+    // ✅ ADICIONE ESTES 3 MÉTODOS QUE ESTÃO FALTANDO:
+    
+    @Override
+    public RestaurantDTO findById(Long id) {
+        ModelMapper mapper = new ModelMapper();
+        Restaurant restaurant = repository.findById(id).orElse(null);
+        if (restaurant == null) {
+            return null;
+        }
+        return mapper.map(restaurant, RestaurantDTO.class);
+    }
+    
+    @Override
+    public RestaurantDTO update(Long id, RestaurantDTO restaurantDTO) {
+        ModelMapper mapper = new ModelMapper();
+        Restaurant restaurant = repository.findById(id).orElse(null);
+        if (restaurant == null) {
+            return null;
+        }
+        
+        restaurant.setName(restaurantDTO.getName());
+        restaurant.setDescription(restaurantDTO.getDescription());
+        
+        Restaurant updatedRestaurant = repository.save(restaurant);
+        return mapper.map(updatedRestaurant, RestaurantDTO.class);
+    }
+    
+    @Override
+    public void delete(Long id) {
+        repository.deleteById(id);
+    }
 }
