@@ -57,8 +57,8 @@ public class RestaurantService implements IRestaurantService {
             return null;
         }
         
-        restaurant.setName(restaurantDTO.getName());
-        restaurant.setDescription(restaurantDTO.getDescription());
+        restaurant.setNome(restaurantDTO.getNome());
+        restaurant.setDescricao(restaurantDTO.getDescricao());
         
         Restaurant updatedRestaurant = repository.save(restaurant);
         return mapper.map(updatedRestaurant, RestaurantDTO.class);

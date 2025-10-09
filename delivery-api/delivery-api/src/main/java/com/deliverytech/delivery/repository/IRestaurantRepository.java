@@ -8,6 +8,6 @@ import com.deliverytech.delivery.entity.Restaurant;
 
 @Repository
 public interface IRestaurantRepository extends JpaRepository<Restaurant, Long>{
-    public Restaurant findByName(String name); 
-    public boolean existsByName(String name);
+    public Restaurant findByNome(String nome); 
+    public boolean existsByNome(String nome);
 }

@@ -1,6 +1,8 @@
 package com.deliverytech.delivery.entity;
- 
-import jakarta.persistence.Column;
+
+import java.math.BigDecimal;
+import java.time.OffsetDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -19,9 +21,12 @@ public class Restaurant {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
- 
-    @Column(name = "nome", nullable = false)
-    private String name;    
-    private String description;
-    private String cuisine;
+    private String nome;    
+    private String descricao;
+    private String cozinha;
+    private BigDecimal estrelas;
+    private OffsetDateTime horario;
+    private String telefone;
+    private String endereco;
+    private String CNPJ;
 }
