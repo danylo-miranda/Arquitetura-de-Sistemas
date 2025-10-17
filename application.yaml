@@ -62,3 +62,9 @@ logging:
     com.deliverytech.delivery: DEBUG
     org.springframework.web: INFO
     org.springdoc: INFO
+
+# API
+api:
+  security:
+    token:
+      secret: "sua-chave-secreta-super-segura-aqui-minimo-32-caracteres"

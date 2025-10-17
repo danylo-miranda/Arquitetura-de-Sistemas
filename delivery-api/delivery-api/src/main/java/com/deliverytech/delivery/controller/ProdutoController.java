@@ -17,7 +17,7 @@ import com.deliverytech.delivery.service.IProduto;
 @RestController
 @RequestMapping("/api/v1/produto")
 public class ProdutoController {
-        @Autowired
+    @Autowired
     private IProduto produtoService;
     
     // Construtor com log
