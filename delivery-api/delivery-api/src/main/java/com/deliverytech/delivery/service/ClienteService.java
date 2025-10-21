@@ -1,5 +1,106 @@
 package com.deliverytech.delivery.service;
 
-public class ClienteService {
+import java.util.List;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import com.deliverytech.delivery.dto.ClienteDTO;
+import com.deliverytech.delivery.entity.Cliente;
+import com.deliverytech.delivery.repository.ClienteRepository; // Nome correto
+
+
+@Service
+public class ClienteService {
+    
+    @Autowired
+    private ClienteRepository clienteRepository; // Nome corrigido
+    
+    public List<ClienteDTO> findAll() {
+        return clienteRepository.findAll().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
+    public ClienteDTO findById(Long id) {
+        Cliente cliente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
+        return toDTO(cliente);
+    }
+    
+    public ClienteDTO create(ClienteDTO clienteDTO) {
+        // Verificar se email já existe
+        if (clienteRepository.existsByEmail(clienteDTO.email())) {
+            throw new RuntimeException("Email já cadastrado: " + clienteDTO.email());
+        }
+        
+        Cliente cliente = toEntity(clienteDTO);
+        Cliente clienteSalvo = clienteRepository.save(cliente);
+        return toDTO(clienteSalvo);
+    }
+    
+    public ClienteDTO update(Long id, ClienteDTO clienteDTO) {
+        Cliente clienteExistente = clienteRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
+        
+        // Verificar se o email foi alterado e se já existe
+        if (!clienteExistente.getEmail().equals(clienteDTO.email()) && 
+            clienteRepository.existsByEmail(clienteDTO.email())) {
+            throw new RuntimeException("Email já cadastrado: " + clienteDTO.email());
+        }
+        
+        // Atualiza os campos
+        clienteExistente.setNome(clienteDTO.nome());
+        clienteExistente.setEmail(clienteDTO.email());
+        clienteExistente.setTelefone(clienteDTO.telefone());
+        clienteExistente.setEndereco(clienteDTO.endereco());
+        clienteExistente.setAtivo(clienteDTO.ativo());
+        
+        Cliente clienteAtualizado = clienteRepository.save(clienteExistente);
+        return toDTO(clienteAtualizado);
+    }
+    
+    public void delete(Long id) {
+        if (!clienteRepository.existsById(id)) {
+            throw new RuntimeException("Cliente não encontrado com ID: " + id);
+        }
+        clienteRepository.deleteById(id);
+    }
+    
+    // Métodos adicionais
+    public List<ClienteDTO> findByAtivoTrue() {
+        return clienteRepository.findByAtivoTrue().stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+    }
+    
+    public ClienteDTO findByEmail(String email) {
+        Cliente cliente = clienteRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Cliente não encontrado com email: " + email));
+        return toDTO(cliente);
+    }
+    
+    // Converter Entidade para DTO
+    private ClienteDTO toDTO(Cliente cliente) {
+        return new ClienteDTO(
+            cliente.getId(),
+            cliente.getNome(),
+            cliente.getEmail(),
+            cliente.getTelefone(),
+            cliente.getEndereco(),
+            cliente.getAtivo()
+        );
+    }
+    
+    // Converter DTO para Entidade
+    private Cliente toEntity(ClienteDTO clienteDTO) {
+        Cliente cliente = new Cliente();
+        cliente.setNome(clienteDTO.nome());
+        cliente.setEmail(clienteDTO.email());
+        cliente.setTelefone(clienteDTO.telefone());
+        cliente.setEndereco(clienteDTO.endereco());
+        cliente.setAtivo(clienteDTO.ativo() != null ? clienteDTO.ativo() : true);
+        return cliente;
+    }
 }
