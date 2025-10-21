@@ -22,7 +22,7 @@ public class DeliveryApiApplication {
         SpringApplication.run(DeliveryApiApplication.class, args);
         
         System.out.println("Application started successfully!");
-        System.out.println("Swagger UI: http://localhost:8080/swagger-ui.html");
+        System.out.println("Swagger UI: http://localhost:8080/swagger-ui/index.html#/");
         System.out.println("Health Check: http://localhost:8080/actuator/health");
         System.out.println("API Base: http://localhost:8080/api/v1/restaurants");
     }

@@ -8,14 +8,13 @@ import org.springframework.stereotype.Service;
 
 import com.deliverytech.delivery.dto.ClienteDTO;
 import com.deliverytech.delivery.entity.Cliente;
-import com.deliverytech.delivery.repository.ClienteRepository; // Nome correto
-
+import com.deliverytech.delivery.repository.ClienteRepository;
 
 @Service
 public class ClienteService {
     
     @Autowired
-    private ClienteRepository clienteRepository; // Nome corrigido
+    private ClienteRepository clienteRepository;
     
     public List<ClienteDTO> findAll() {
         return clienteRepository.findAll().stream()
@@ -31,8 +30,8 @@ public class ClienteService {
     
     public ClienteDTO create(ClienteDTO clienteDTO) {
         // Verificar se email já existe
-        if (clienteRepository.existsByEmail(clienteDTO.email())) {
-            throw new RuntimeException("Email já cadastrado: " + clienteDTO.email());
+        if (clienteRepository.existsByEmail(clienteDTO.getEmail())) {
+            throw new RuntimeException("Email já cadastrado: " + clienteDTO.getEmail());
         }
         
         Cliente cliente = toEntity(clienteDTO);
@@ -45,17 +44,20 @@ public class ClienteService {
                 .orElseThrow(() -> new RuntimeException("Cliente não encontrado com ID: " + id));
         
         // Verificar se o email foi alterado e se já existe
-        if (!clienteExistente.getEmail().equals(clienteDTO.email()) && 
-            clienteRepository.existsByEmail(clienteDTO.email())) {
-            throw new RuntimeException("Email já cadastrado: " + clienteDTO.email());
+        if (!clienteExistente.getEmail().equals(clienteDTO.getEmail()) && 
+            clienteRepository.existsByEmail(clienteDTO.getEmail())) {
+            throw new RuntimeException("Email já cadastrado: " + clienteDTO.getEmail());
         }
         
         // Atualiza os campos
-        clienteExistente.setNome(clienteDTO.nome());
-        clienteExistente.setEmail(clienteDTO.email());
-        clienteExistente.setTelefone(clienteDTO.telefone());
-        clienteExistente.setEndereco(clienteDTO.endereco());
-        clienteExistente.setAtivo(clienteDTO.ativo());
+        clienteExistente.setNome(clienteDTO.getNome());
+        clienteExistente.setEmail(clienteDTO.getEmail());
+        clienteExistente.setTelefone(clienteDTO.getTelefone());
+        clienteExistente.setEndereco(clienteDTO.getEndereco());
+        
+        // Verifica se ativo é null e define valor padrão
+        Boolean ativo = clienteDTO.getAtivo() != null ? clienteDTO.getAtivo() : true;
+        clienteExistente.setAtivo(ativo);
         
         Cliente clienteAtualizado = clienteRepository.save(clienteExistente);
         return toDTO(clienteAtualizado);
@@ -84,7 +86,6 @@ public class ClienteService {
     // Converter Entidade para DTO
     private ClienteDTO toDTO(Cliente cliente) {
         return new ClienteDTO(
-            cliente.getId(),
             cliente.getNome(),
             cliente.getEmail(),
             cliente.getTelefone(),
@@ -96,11 +97,15 @@ public class ClienteService {
     // Converter DTO para Entidade
     private Cliente toEntity(ClienteDTO clienteDTO) {
         Cliente cliente = new Cliente();
-        cliente.setNome(clienteDTO.nome());
-        cliente.setEmail(clienteDTO.email());
-        cliente.setTelefone(clienteDTO.telefone());
-        cliente.setEndereco(clienteDTO.endereco());
-        cliente.setAtivo(clienteDTO.ativo() != null ? clienteDTO.ativo() : true);
+        cliente.setNome(clienteDTO.getNome());
+        cliente.setEmail(clienteDTO.getEmail());
+        cliente.setTelefone(clienteDTO.getTelefone());
+        cliente.setEndereco(clienteDTO.getEndereco());
+        
+        // Define valor padrão para ativo se for null
+        Boolean ativo = clienteDTO.getAtivo() != null ? clienteDTO.getAtivo() : true;
+        cliente.setAtivo(ativo);
+        
         return cliente;
     }
 }
