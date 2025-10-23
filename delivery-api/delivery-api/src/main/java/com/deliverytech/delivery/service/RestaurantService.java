@@ -8,22 +8,22 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.deliverytech.delivery.dto.RestaurantDTO;
-import com.deliverytech.delivery.entity.Restaurant;
-import com.deliverytech.delivery.repository.IRestaurantRepository;
+import com.deliverytech.delivery.entity.Restaurante;
+import com.deliverytech.delivery.repository.IRestauranteRepository;
 
 
 @Service
 public class RestaurantService implements IRestaurantService {
  
     @Autowired
-    private IRestaurantRepository repository;
+    private IRestauranteRepository repository;
  
     @Override
     public RestaurantDTO create(RestaurantDTO restaurantDTO) {
        ModelMapper mapper = new ModelMapper();
  
-       Restaurant entity = mapper.map(restaurantDTO, Restaurant.class);
-       Restaurant restaurant = repository.save(entity);
+       Restaurante entity = mapper.map(restaurantDTO, Restaurante.class);
+       Restaurante restaurant = repository.save(entity);
        RestaurantDTO dto = mapper.map(restaurant, RestaurantDTO.class);
  
        return dto;
@@ -32,7 +32,7 @@ public class RestaurantService implements IRestaurantService {
     @Override
     public List<RestaurantDTO> findAll() {
         ModelMapper mapper = new ModelMapper();  
-        List<Restaurant> restaurantes = repository.findAll();
+        List<Restaurante> restaurantes = repository.findAll();
  
         List<RestaurantDTO> restaurantDtoList = Arrays.asList(mapper.map(restaurantes, RestaurantDTO[].class));
  
@@ -42,7 +42,7 @@ public class RestaurantService implements IRestaurantService {
     @Override
     public RestaurantDTO findById(Long id) {
         ModelMapper mapper = new ModelMapper();
-        Restaurant restaurant = repository.findById(id).orElse(null);
+        Restaurante restaurant = repository.findById(id).orElse(null);
         if (restaurant == null) {
             return null;
         }
@@ -52,15 +52,15 @@ public class RestaurantService implements IRestaurantService {
     @Override
     public RestaurantDTO update(Long id, RestaurantDTO restaurantDTO) {
         ModelMapper mapper = new ModelMapper();
-        Restaurant restaurant = repository.findById(id).orElse(null);
+        Restaurante restaurant = repository.findById(id).orElse(null);
         if (restaurant == null) {
             return null;
         }
         
         restaurant.setNome(restaurantDTO.getNome());
-        restaurant.setDescricao(restaurantDTO.getDescricao());
+        restaurant.setCategoria(restaurantDTO.getCategoria());
         
-        Restaurant updatedRestaurant = repository.save(restaurant);
+        Restaurante updatedRestaurant = repository.save(restaurant);
         return mapper.map(updatedRestaurant, RestaurantDTO.class);
     }
     

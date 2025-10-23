@@ -56,8 +56,8 @@ public class ClienteService {
         clienteExistente.setEndereco(clienteDTO.getEndereco());
         
         // Verifica se ativo é null e define valor padrão
-        Boolean ativo = clienteDTO.getAtivo() != null ? clienteDTO.getAtivo() : true;
-        clienteExistente.setAtivo(ativo);
+        //Boolean ativo = clienteDTO.getAtivo() != null ? clienteDTO.getAtivo() : true;
+        //clienteExistente.setAtivo(ativo);
         
         Cliente clienteAtualizado = clienteRepository.save(clienteExistente);
         return toDTO(clienteAtualizado);
@@ -89,8 +89,7 @@ public class ClienteService {
             cliente.getNome(),
             cliente.getEmail(),
             cliente.getTelefone(),
-            cliente.getEndereco(),
-            cliente.getAtivo()
+            cliente.getEndereco()
         );
     }
     
@@ -103,8 +102,8 @@ public class ClienteService {
         cliente.setEndereco(clienteDTO.getEndereco());
         
         // Define valor padrão para ativo se for null
-        Boolean ativo = clienteDTO.getAtivo() != null ? clienteDTO.getAtivo() : true;
-        cliente.setAtivo(ativo);
+        //Boolean ativo = clienteDTO.getAtivo() != null ? clienteDTO.getAtivo() : true;
+        //cliente.setAtivo(ativo);
         
         return cliente;
     }

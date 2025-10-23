@@ -1,25 +1,43 @@
 package com.deliverytech.delivery.dto;
 
-import com.deliverytech.delivery.entity.StatusPedido;
-import com.deliverytech.delivery.entity.Cliente;
-import com.deliverytech.delivery.entity.Restaurant;
-import com.deliverytech.delivery.entity.ItemPedido;
-
-import lombok.Data;
-import java.time.OffsetDateTime;
-import java.math.BigDecimal;
 import java.util.List;
 
-@Data
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
+
+
 public class PedidoDTO {
-    private Long id;
-    private OffsetDateTime dataPedido;
+ 
+    @NotNull(message = "Cliente é obrigatório")
+    private Long clienteId;
+ 
+    @NotNull(message = "Restaurante é obrigatório")
+    private Long restauranteId;
+ 
+    @NotBlank(message = "Endereço de entrega é obrigatório")
+    @Size(max = 200, message = "Endereço deve ter no máximo 200 caracteres")
     private String enderecoEntrega;
-    private BigDecimal subtotal;
-    private BigDecimal taxaEntrega;
-    private BigDecimal valorTotal;
-    private StatusPedido status;
-    private Cliente cliente;
-    private Restaurant restaurante;
-    private List<ItemPedido> itens;
+ 
+    @NotEmpty(message = "Pedido deve ter pelo menos um item")
+    @Valid
+    private List<ItemPedidoDTO> itens;
+ 
+    // Getters e Setters
+
+    public Long getClienteId() { return clienteId; }
+    public void setClienteId(Long clienteId) { this.clienteId = clienteId; }
+ 
+    public Long getRestauranteId() { return restauranteId; }
+    public void setRestauranteId(Long restauranteId) { this.restauranteId = restauranteId; }
+ 
+    public String getEnderecoEntrega() { return enderecoEntrega; }
+    public void setEnderecoEntrega(String enderecoEntrega) { this.enderecoEntrega = enderecoEntrega; }
+ 
+    public List<ItemPedidoDTO> getItens() { return itens; }
+    public void setItens(List<ItemPedidoDTO> itens) { this.itens = itens; }
+
 }
+ 
