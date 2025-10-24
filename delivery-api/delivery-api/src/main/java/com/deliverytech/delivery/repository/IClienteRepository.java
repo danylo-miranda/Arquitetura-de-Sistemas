@@ -9,7 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.deliverytech.delivery.entity.Cliente;
 
 @Repository
-public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+public interface IClienteRepository extends JpaRepository<Cliente, Long> {
     
     List<Cliente> findByAtivoTrue();
     Optional<Cliente> findByEmail(String email);

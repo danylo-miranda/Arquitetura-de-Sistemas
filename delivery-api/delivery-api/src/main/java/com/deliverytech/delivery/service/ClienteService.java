@@ -8,13 +8,13 @@ import org.springframework.stereotype.Service;
 
 import com.deliverytech.delivery.dto.ClienteDTO;
 import com.deliverytech.delivery.entity.Cliente;
-import com.deliverytech.delivery.repository.ClienteRepository;
+import com.deliverytech.delivery.repository.IClienteRepository;
 
 @Service
 public class ClienteService {
     
     @Autowired
-    private ClienteRepository clienteRepository;
+    private IClienteRepository clienteRepository;
     
     public List<ClienteDTO> findAll() {
         return clienteRepository.findAll().stream()

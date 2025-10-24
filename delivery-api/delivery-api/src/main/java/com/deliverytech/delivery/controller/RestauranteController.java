@@ -30,17 +30,13 @@ public class RestauranteController {
  
     @GetMapping
     public ResponseEntity<List<RestaurantDTO>> list() {
-        System.out.println("GET /api/v1/restaurants chamado");
         List<RestaurantDTO> restaurants = restaurantService.findAll();
-        System.out.println("Retornando " + restaurants.size() + " restaurantes");
         return ResponseEntity.status(HttpStatus.OK).body(restaurants);
     }
  
     @PostMapping
     public ResponseEntity<RestaurantDTO> create(@Valid @RequestBody RestaurantDTO restaurantDTO) {
-        System.out.println("POST /api/v1/restaurants chamado: " + restaurantDTO);
         RestaurantDTO restaurant = restaurantService.create(restaurantDTO);
-        System.out.println("Restaurante criado: " + restaurant);
         return ResponseEntity.status(HttpStatus.CREATED).body(restaurant);
     }
 }
