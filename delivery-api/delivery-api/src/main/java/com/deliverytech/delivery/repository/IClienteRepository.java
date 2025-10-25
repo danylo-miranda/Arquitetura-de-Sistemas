@@ -10,9 +10,21 @@ import com.deliverytech.delivery.entity.Cliente;
 
 @Repository
 public interface IClienteRepository extends JpaRepository<Cliente, Long> {
-    
-    List<Cliente> findByAtivoTrue();
+ 
+    // Buscar cliente por email (método derivado)
     Optional<Cliente> findByEmail(String email);
+ 
+    // Verificar se email já existe
     boolean existsByEmail(String email);
+ 
+    // Buscar clientes ativos
+    List<Cliente> findByAtivoTrue();
+ 
+    // Buscar clientes por nome (contendo)
     List<Cliente> findByNomeContainingIgnoreCase(String nome);
+ 
+    // Buscar clientes por telefone
+    Optional<Cliente> findByTelefone(String telefone);
+ 
 }
+ 

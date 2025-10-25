@@ -14,19 +14,29 @@ import com.deliverytech.delivery.entity.StatusPedido;
 @Repository
 public interface IPedidoRepository extends JpaRepository<Pedido, Long> {
     
+    // Buscar por número do pedido
     Optional<Pedido> findByNumeroPedido(String numeroPedido);
     
-    List<Pedido> findByClienteId(Long clienteId);
+    // Buscar por ID do cliente
+    @Query("SELECT p FROM Pedido p WHERE p.cliente.id = :clienteId")
+    List<Pedido> findByClienteId(@Param("clienteId") Long clienteId);
     
-    List<Pedido> findByRestauranteId(Long restauranteId);
+    // Buscar por ID do restaurante
+    @Query("SELECT p FROM Pedido p WHERE p.restaurante.id = :restauranteId")
+    List<Pedido> findByRestauranteId(@Param("restauranteId") Long restauranteId);
     
-    List<Pedido> findByStatus(StatusPedido status);
+    // Buscar por status
+    @Query("SELECT p FROM Pedido p WHERE p.status = :status")
+    List<Pedido> findByStatus(@Param("status") StatusPedido status);
     
+    // Verificar se existe pedido com número
     boolean existsByNumeroPedido(String numeroPedido);
     
-    @Query("SELECT COUNT(p) > 0 FROM Pedido p WHERE p.cliente.id = :clienteId AND p.status IN :statuses")
-    boolean existsByClienteIdAndStatusIn(@Param("clienteId") Long clienteId, @Param("statuses") List<StatusPedido> statuses);
+    // Buscar por cliente e status
+    @Query("SELECT p FROM Pedido p WHERE p.cliente.id = :clienteId AND p.status = :status")
+    List<Pedido> findByClienteIdAndStatus(@Param("clienteId") Long clienteId, @Param("status") StatusPedido status);
     
+    // Buscar por restaurante e status
     @Query("SELECT p FROM Pedido p WHERE p.restaurante.id = :restauranteId AND p.status = :status")
     List<Pedido> findByRestauranteIdAndStatus(@Param("restauranteId") Long restauranteId, @Param("status") StatusPedido status);
 }

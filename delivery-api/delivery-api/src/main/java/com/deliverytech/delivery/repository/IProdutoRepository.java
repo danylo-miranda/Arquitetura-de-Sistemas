@@ -11,7 +11,7 @@ import com.deliverytech.delivery.entity.Produto;
 @Repository
 public interface IProdutoRepository extends JpaRepository<Produto, Long> {
     
-    // ✅ Método findById já está disponível pelo JpaRepository
+    //Método findById já está disponível pelo JpaRepository
     
     List<Produto> findByRestauranteId(Long restauranteId);
     
