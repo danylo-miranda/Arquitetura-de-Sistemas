@@ -11,17 +11,38 @@ import com.deliverytech.delivery.entity.Produto;
 @Repository
 public interface IProdutoRepository extends JpaRepository<Produto, Long> {
     
-    //Método findById já está disponível pelo JpaRepository
+    /**
+     * Verifica se existe produto com o mesmo nome
+     */
+    boolean existsByNome(String nome);
     
+    /**
+     * Busca produtos por categoria e que estão disponíveis
+     */
+    List<Produto> findByCategoriaAndDisponivelTrue(String categoria);
+    
+    /**
+     * Busca produtos por nome (busca parcial) e que estão disponíveis
+     */
+    List<Produto> findByNomeContainingIgnoreCaseAndDisponivelTrue(String nome);
+    
+    /**
+     * Busca produtos por restaurante
+     */
     List<Produto> findByRestauranteId(Long restauranteId);
     
-    List<Produto> findByCategoria(String categoria);
-    
-    List<Produto> findByDisponivelTrue();
-    
+    /**
+     * Busca produtos por restaurante e que estão disponíveis
+     */
     List<Produto> findByRestauranteIdAndDisponivelTrue(Long restauranteId);
     
+    /**
+     * Busca produto por nome e restaurante (para validação de unicidade)
+     */
     Optional<Produto> findByNomeAndRestauranteId(String nome, Long restauranteId);
     
+    /**
+     * Verifica se existe produto com mesmo nome no restaurante
+     */
     boolean existsByNomeAndRestauranteId(String nome, Long restauranteId);
 }

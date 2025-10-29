@@ -1,9 +1,13 @@
 package com.deliverytech.delivery.dto;
 
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Max;
+import java.math.BigDecimal;
 
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
+
+@Data
 public class ItemPedidoDTO {
  
     @NotNull(message = "Produto é obrigatório")
@@ -14,10 +18,17 @@ public class ItemPedidoDTO {
     @Max(value = 10, message = "Quantidade máxima é 10")
     private Integer quantidade;
  
-    // Getters e Setters
-    public Long getProdutoId() { return produtoId; }
-    public void setProdutoId(Long produtoId) { this.produtoId = produtoId; }
+    // Campos de resposta (não são preenchidos na requisição)
+    private String produtoNome;
+    private BigDecimal precoUnitario;
+    private BigDecimal subtotal;
  
-    public Integer getQuantidade() { return quantidade; }
-    public void setQuantidade(Integer quantidade) { this.quantidade = quantidade; }
+    // Construtor padrão
+    public ItemPedidoDTO() {}
+ 
+    // Construtor para facilitar testes
+    public ItemPedidoDTO(Long produtoId, Integer quantidade) {
+        this.produtoId = produtoId;
+        this.quantidade = quantidade;
+    }
 }
