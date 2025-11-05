@@ -1,6 +1,10 @@
 # Configuração do servidor
 server:
   port: 8080
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
 
 # Configuração da aplicação
 spring:
@@ -67,4 +71,6 @@ logging:
 api:
   security:
     token:
-      secret: "sua-chave-secreta-super-segura-aqui-minimo-32-caracteres"
+      secret: "meu-segredo-super-seguro"
+
+

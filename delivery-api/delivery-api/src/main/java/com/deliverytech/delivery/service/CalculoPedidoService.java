@@ -1,9 +1,11 @@
 package com.deliverytech.delivery.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -14,6 +16,8 @@ import com.deliverytech.delivery.dto.CalculoPedidoResponseDTO;
 import com.deliverytech.delivery.dto.ItemCalculoDetalhadoDTO;
 import com.deliverytech.delivery.entity.Produto;
 import com.deliverytech.delivery.entity.Restaurante;
+import com.deliverytech.delivery.exception.ProdutoInvalidoException;
+import com.deliverytech.delivery.exception.RestauranteNaoEncontradoException;
 import com.deliverytech.delivery.repository.ICalculoPedidoRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -27,103 +31,64 @@ public class CalculoPedidoService {
     private final ICalculoPedidoRepository calculoPedidoRepository;
 
     /**
-     * Calcula o valor total do pedido de forma simples
+     * Cálculo simples do pedido
      */
     public CalculoPedidoResponseDTO calcularPedido(CalculoPedidoRequestDTO request) {
-        log.info("Calculando pedido para restaurante: {}", request.getRestauranteId());
-        
-        // Validar restaurante
-        Restaurante restaurante = calculoPedidoRepository
-                .findRestauranteAtivoComTaxa(request.getRestauranteId())
-                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado ou inativo"));
+        log.info("Iniciando cálculo de pedido para restaurante ID: {}", request.getRestauranteId());
 
-        // Extrair IDs dos produtos
-        List<Long> produtoIds = request.getItens().stream()
-                .map(CalculoPedidoRequestDTO.ItemCalculoDTO::getProdutoId)
-                .collect(Collectors.toList());
+        Restaurante restaurante = validarRestaurante(request.getRestauranteId());
+        Map<Long, Produto> produtosMap = validarEMapearProdutos(request, restaurante.getId());
 
-        // Buscar produtos disponíveis
-        List<Produto> produtos = calculoPedidoRepository.findProdutosDisponiveisByIds(produtoIds);
-        
-        // Verificar se todos os produtos pertencem ao restaurante
-        validarProdutosDoRestaurante(produtoIds, restaurante.getId(), produtos);
-
-        // Calcular valores
-        ResultadoCalculo resultado = calcularValores(request, produtos, restaurante);
+        ResultadoCalculo resultado = calcularValores(request, produtosMap, restaurante);
 
         return new CalculoPedidoResponseDTO(
-                resultado.getValorSubtotal(),
-                resultado.getTaxaEntrega(),
-                resultado.getValorTotal(),
-                resultado.getQuantidadeItens(),
+                resultado.valorSubtotal(),
+                resultado.taxaEntrega(),
+                resultado.valorTotal(),
+                resultado.quantidadeItens(),
                 restaurante.getNome()
         );
     }
 
     /**
-     * Calcula o pedido com detalhes de cada item
+     * Cálculo detalhado do pedido, com breakdown por item
      */
     public CalculoPedidoDetalhadoResponseDTO calcularPedidoDetalhado(CalculoPedidoRequestDTO request) {
-        log.info("Calculando pedido detalhado para restaurante: {}", request.getRestauranteId());
-        
-        // Validar restaurante
-        Restaurante restaurante = calculoPedidoRepository
-                .findRestauranteAtivoComTaxa(request.getRestauranteId())
-                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado ou inativo"));
+        log.info("Iniciando cálculo detalhado de pedido para restaurante ID: {}", request.getRestauranteId());
 
-        // Extrair IDs dos produtos
-        List<Long> produtoIds = request.getItens().stream()
-                .map(CalculoPedidoRequestDTO.ItemCalculoDTO::getProdutoId)
-                .collect(Collectors.toList());
+        Restaurante restaurante = validarRestaurante(request.getRestauranteId());
+        Map<Long, Produto> produtosMap = validarEMapearProdutos(request, restaurante.getId());
 
-        // Buscar produtos disponíveis
-        List<Produto> produtos = calculoPedidoRepository.findProdutosDisponiveisByIds(produtoIds);
-        
-        // Verificar se todos os produtos pertencem ao restaurante
-        validarProdutosDoRestaurante(produtoIds, restaurante.getId(), produtos);
-
-        // Criar mapa de produtos para acesso rápido
-        Map<Long, Produto> produtoMap = produtos.stream()
-                .collect(Collectors.toMap(Produto::getId, produto -> produto));
-
-        // Calcular valores e itens detalhados
-        ResultadoCalculoDetalhado resultado = calcularValoresDetalhados(request, produtoMap, restaurante);
+        ResultadoCalculoDetalhado resultado = calcularValoresDetalhados(request, produtosMap, restaurante);
 
         return new CalculoPedidoDetalhadoResponseDTO(
-                resultado.getValorSubtotal(),
-                resultado.getTaxaEntrega(),
-                resultado.getValorTotal(),
-                resultado.getQuantidadeItens(),
+                resultado.valorSubtotal(),
+                resultado.taxaEntrega(),
+                resultado.valorTotal(),
+                resultado.quantidadeItens(),
                 restaurante.getNome(),
                 restaurante.getCategoria(),
-                resultado.getItensDetalhados()
+                resultado.itensDetalhados()
         );
     }
 
     /**
-     * Simula vários cenários de pedido para comparação
+     * Simulação de cenários de pedido para um restaurante
      */
     public List<CalculoPedidoResponseDTO> simularMultiplosCenarios(Long restauranteId) {
-        log.info("Simulando múltiplos cenários para restaurante: {}", restauranteId);
-        
-        Restaurante restaurante = calculoPedidoRepository
-                .findRestauranteAtivoComTaxa(restauranteId)
-                .orElseThrow(() -> new RuntimeException("Restaurante não encontrado ou inativo"));
+        log.info("Simulando múltiplos cenários para restaurante ID: {}", restauranteId);
 
-        List<Produto> produtosPopulares = calculoPedidoRepository
-                .findProdutosPopularesPorRestaurante(restauranteId);
+        validarRestaurante(restauranteId); // Just validate the restaurant exists
+        List<Produto> produtosPopulares = calculoPedidoRepository.findProdutosPopularesPorRestaurante(restauranteId);
+
+        if (produtosPopulares.isEmpty()) {
+            throw new ProdutoInvalidoException("Nenhum produto popular encontrado para simulação.");
+        }
 
         List<CalculoPedidoResponseDTO> simulacoes = new ArrayList<>();
 
         // Cenário 1: Pedido mínimo (1 produto)
-        if (!produtosPopulares.isEmpty()) {
-            CalculoPedidoRequestDTO request1 = new CalculoPedidoRequestDTO();
-            request1.setRestauranteId(restauranteId);
-            request1.setItens(List.of(
-                    criarItemCalculo(produtosPopulares.get(0).getId(), 1)
-            ));
-            simulacoes.add(calcularPedido(request1));
-        }
+        simulacoes.add(calcularPedido(criarRequest(restauranteId, produtosPopulares.get(0), 1)));
 
         // Cenário 2: Pedido médio (3 produtos)
         if (produtosPopulares.size() >= 3) {
@@ -140,68 +105,92 @@ public class CalculoPedidoService {
         return simulacoes;
     }
 
-    // Métodos auxiliares privados
+    // =====================================
+    // MÉTODOS AUXILIARES PRIVADOS
+    // =====================================
+
+    private Restaurante validarRestaurante(Long restauranteId) {
+        return calculoPedidoRepository.findRestauranteAtivoComTaxa(restauranteId)
+                .orElseThrow(() -> new RestauranteNaoEncontradoException(restauranteId));
+    }
+
+    private Map<Long, Produto> validarEMapearProdutos(CalculoPedidoRequestDTO request, Long restauranteId) {
+        List<Long> produtoIds = request.getItens().stream()
+                .map(CalculoPedidoRequestDTO.ItemCalculoDTO::getProdutoId)
+                .toList();
+
+        List<Produto> produtos = calculoPedidoRepository.findProdutosDisponiveisByIds(produtoIds);
+
+        validarProdutosDoRestaurante(produtoIds, restauranteId, produtos);
+
+        return produtos.stream().collect(Collectors.toUnmodifiableMap(Produto::getId, p -> p));
+    }
+
     private void validarProdutosDoRestaurante(List<Long> produtoIds, Long restauranteId, List<Produto> produtosEncontrados) {
-        // Verificar se todos os produtos foram encontrados
         if (produtosEncontrados.size() != produtoIds.size()) {
             List<Long> idsEncontrados = produtosEncontrados.stream()
                     .map(Produto::getId)
-                    .collect(Collectors.toList());
-            
+                    .toList();
+
             List<Long> idsNaoEncontrados = produtoIds.stream()
                     .filter(id -> !idsEncontrados.contains(id))
-                    .collect(Collectors.toList());
-            
-            throw new RuntimeException("Produtos não encontrados ou indisponíveis: " + idsNaoEncontrados);
+                    .toList();
+
+            throw new ProdutoInvalidoException("Produtos não encontrados ou indisponíveis: " + idsNaoEncontrados);
         }
 
-        // Verificar se produtos pertencem ao restaurante
-        Long countProdutosRestaurante = calculoPedidoRepository
-                .countProdutosDoRestaurante(produtoIds, restauranteId);
-        
+        long countProdutosRestaurante = calculoPedidoRepository.countProdutosDoRestaurante(produtoIds, restauranteId);
+
         if (countProdutosRestaurante != produtoIds.size()) {
-            throw new RuntimeException("Alguns produtos não pertencem ao restaurante selecionado");
+            throw new ProdutoInvalidoException("Alguns produtos não pertencem ao restaurante informado.");
         }
     }
 
-    private ResultadoCalculo calcularValores(CalculoPedidoRequestDTO request, List<Produto> produtos, Restaurante restaurante) {
+    private ResultadoCalculo calcularValores(CalculoPedidoRequestDTO request, Map<Long, Produto> produtoMap, Restaurante restaurante) {
         BigDecimal valorSubtotal = BigDecimal.ZERO;
         int quantidadeItens = 0;
 
-        // Criar mapa de produtos para acesso rápido
-        Map<Long, Produto> produtoMap = produtos.stream()
-                .collect(Collectors.toMap(Produto::getId, produto -> produto));
+        for (var item : request.getItens()) {
+            Produto produto = Optional.ofNullable(produtoMap.get(item.getProdutoId()))
+                    .orElseThrow(() -> new ProdutoInvalidoException("Produto inválido: " + item.getProdutoId()));
 
-        // Calcular subtotal
-        for (CalculoPedidoRequestDTO.ItemCalculoDTO item : request.getItens()) {
-            Produto produto = produtoMap.get(item.getProdutoId());
-            BigDecimal subtotalItem = produto.getPreco().multiply(BigDecimal.valueOf(item.getQuantidade()));
+            BigDecimal subtotalItem = produto.getPreco()
+                    .multiply(BigDecimal.valueOf(item.getQuantidade()))
+                    .setScale(2, RoundingMode.HALF_UP);
+
             valorSubtotal = valorSubtotal.add(subtotalItem);
             quantidadeItens += item.getQuantidade();
         }
 
-        BigDecimal taxaEntrega = restaurante.getTaxaEntrega() != null ? restaurante.getTaxaEntrega() : BigDecimal.ZERO;
-        BigDecimal valorTotal = valorSubtotal.add(taxaEntrega);
+        BigDecimal taxaEntrega = Optional.ofNullable(restaurante.getTaxaEntrega()).orElse(BigDecimal.ZERO);
+        BigDecimal valorTotal = valorSubtotal.add(taxaEntrega).setScale(2, RoundingMode.HALF_UP);
+
+        log.debug("Subtotal: {}, Taxa: {}, Total: {}", valorSubtotal, taxaEntrega, valorTotal);
 
         return new ResultadoCalculo(valorSubtotal, taxaEntrega, valorTotal, quantidadeItens);
     }
 
-    private ResultadoCalculoDetalhado calcularValoresDetalhados(CalculoPedidoRequestDTO request, 
-                                                               Map<Long, Produto> produtoMap, 
-                                                               Restaurante restaurante) {
+    private ResultadoCalculoDetalhado calcularValoresDetalhados(
+            CalculoPedidoRequestDTO request,
+            Map<Long, Produto> produtoMap,
+            Restaurante restaurante) {
+
         BigDecimal valorSubtotal = BigDecimal.ZERO;
         int quantidadeItens = 0;
         List<ItemCalculoDetalhadoDTO> itensDetalhados = new ArrayList<>();
 
-        // Calcular subtotal e criar itens detalhados
-        for (CalculoPedidoRequestDTO.ItemCalculoDTO item : request.getItens()) {
-            Produto produto = produtoMap.get(item.getProdutoId());
-            BigDecimal subtotalItem = produto.getPreco().multiply(BigDecimal.valueOf(item.getQuantidade()));
+        for (var item : request.getItens()) {
+            Produto produto = Optional.ofNullable(produtoMap.get(item.getProdutoId()))
+                    .orElseThrow(() -> new ProdutoInvalidoException("Produto inválido: " + item.getProdutoId()));
+
+            BigDecimal subtotalItem = produto.getPreco()
+                    .multiply(BigDecimal.valueOf(item.getQuantidade()))
+                    .setScale(2, RoundingMode.HALF_UP);
+
             valorSubtotal = valorSubtotal.add(subtotalItem);
             quantidadeItens += item.getQuantidade();
 
-            // Criar item detalhado
-            ItemCalculoDetalhadoDTO itemDetalhado = new ItemCalculoDetalhadoDTO(
+            itensDetalhados.add(new ItemCalculoDetalhadoDTO(
                     produto.getId(),
                     produto.getNome(),
                     produto.getDescricao(),
@@ -209,54 +198,45 @@ public class CalculoPedidoService {
                     produto.getPreco(),
                     subtotalItem,
                     produto.isDisponivel()
-            );
-            itensDetalhados.add(itemDetalhado);
+            ));
         }
 
-        BigDecimal taxaEntrega = restaurante.getTaxaEntrega() != null ? restaurante.getTaxaEntrega() : BigDecimal.ZERO;
-        BigDecimal valorTotal = valorSubtotal.add(taxaEntrega);
+        BigDecimal taxaEntrega = Optional.ofNullable(restaurante.getTaxaEntrega()).orElse(BigDecimal.ZERO);
+        BigDecimal valorTotal = valorSubtotal.add(taxaEntrega).setScale(2, RoundingMode.HALF_UP);
 
         return new ResultadoCalculoDetalhado(valorSubtotal, taxaEntrega, valorTotal, quantidadeItens, itensDetalhados);
     }
 
     private CalculoPedidoRequestDTO.ItemCalculoDTO criarItemCalculo(Long produtoId, Integer quantidade) {
-        CalculoPedidoRequestDTO.ItemCalculoDTO item = new CalculoPedidoRequestDTO.ItemCalculoDTO();
+        var item = new CalculoPedidoRequestDTO.ItemCalculoDTO();
         item.setProdutoId(produtoId);
         item.setQuantidade(quantidade);
         return item;
     }
 
-    // Classes auxiliares para encapsular resultados
-    private static class ResultadoCalculo {
-        private final BigDecimal valorSubtotal;
-        private final BigDecimal taxaEntrega;
-        private final BigDecimal valorTotal;
-        private final Integer quantidadeItens;
-
-        public ResultadoCalculo(BigDecimal valorSubtotal, BigDecimal taxaEntrega, 
-                               BigDecimal valorTotal, Integer quantidadeItens) {
-            this.valorSubtotal = valorSubtotal;
-            this.taxaEntrega = taxaEntrega;
-            this.valorTotal = valorTotal;
-            this.quantidadeItens = quantidadeItens;
-        }
-
-        public BigDecimal getValorSubtotal() { return valorSubtotal; }
-        public BigDecimal getTaxaEntrega() { return taxaEntrega; }
-        public BigDecimal getValorTotal() { return valorTotal; }
-        public Integer getQuantidadeItens() { return quantidadeItens; }
+    private CalculoPedidoRequestDTO criarRequest(Long restauranteId, Produto produto, int quantidade) {
+        var request = new CalculoPedidoRequestDTO();
+        request.setRestauranteId(restauranteId);
+        request.setItens(List.of(criarItemCalculo(produto.getId(), quantidade)));
+        return request;
     }
 
-    private static class ResultadoCalculoDetalhado extends ResultadoCalculo {
-        private final List<ItemCalculoDetalhadoDTO> itensDetalhados;
+    // =====================================
+    // RECORDS (Java 21)
+    // =====================================
 
-        public ResultadoCalculoDetalhado(BigDecimal valorSubtotal, BigDecimal taxaEntrega, 
-                                        BigDecimal valorTotal, Integer quantidadeItens,
-                                        List<ItemCalculoDetalhadoDTO> itensDetalhados) {
-            super(valorSubtotal, taxaEntrega, valorTotal, quantidadeItens);
-            this.itensDetalhados = itensDetalhados;
-        }
+    private record ResultadoCalculo(
+            BigDecimal valorSubtotal,
+            BigDecimal taxaEntrega,
+            BigDecimal valorTotal,
+            Integer quantidadeItens
+    ) {}
 
-        public List<ItemCalculoDetalhadoDTO> getItensDetalhados() { return itensDetalhados; }
-    }
+    private record ResultadoCalculoDetalhado(
+            BigDecimal valorSubtotal,
+            BigDecimal taxaEntrega,
+            BigDecimal valorTotal,
+            Integer quantidadeItens,
+            List<ItemCalculoDetalhadoDTO> itensDetalhados
+    ) {}
 }
