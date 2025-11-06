@@ -26,9 +26,15 @@ jobs:
       working-directory: ./delivery-api/delivery-api
       run: mvn clean package -DskipTests
 
+    # (opcional, se quiser pular testes)
+    # - name: Run Tests
+    #   working-directory: ./delivery-api/delivery-api
+    #   run: mvn test
+
     - name: Build Docker Image
       working-directory: ./delivery-api/delivery-api
       run: docker build -t myapp:latest .
+
 
     - name: Deploy
       run: echo "Deploy automático executado"
