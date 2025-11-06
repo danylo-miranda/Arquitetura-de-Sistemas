@@ -38,13 +38,3 @@ jobs:
 
     - name: Deploy
       run: echo "Deploy automático executado"
-
-    - name: Update dependency graph
-      uses: advanced-security/maven-dependency-submission-action@v3
-      with:
-        directory: ./delivery-api/delivery-api
-
-    - name: Update dependency graph
-      uses: advanced-security/maven-dependency-submission-action@v3
-      with:
-        directory: ./delivery-api/delivery-api
