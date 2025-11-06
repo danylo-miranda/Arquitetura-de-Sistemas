@@ -34,6 +34,7 @@ jobs:
 
     - name: Build with Maven
       run: mvn clean package -DskipTests
+      working-directory: ./delivery-api
 
     - name: Run Tests
       run: mvn test
