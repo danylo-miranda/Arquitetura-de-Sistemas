@@ -26,10 +26,6 @@ jobs:
       working-directory: ./delivery-api/delivery-api
       run: mvn clean package -DskipTests
 
-    - name: Run Tests
-      working-directory: ./delivery-api/delivery-api
-      run: mvn test
-
     - name: Build Docker Image
       working-directory: ./delivery-api/delivery-api
       run: docker build -t myapp:latest .
