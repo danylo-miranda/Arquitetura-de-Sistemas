@@ -32,6 +32,6 @@ Sistema de delivery desenvolvido com Spring Boot e Java 21.
 - Profile: development
  
 ## 👨‍💻 Desenvolvedor
-Danylo Miranda - TURMA 03365 B 
+Danylo Miranda  
 Desenvolvido com JDK 21 e Spring Boot 3.5.6
  
